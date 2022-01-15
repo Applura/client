@@ -5,4 +5,9 @@ describe('sanity checks:', () => {
 		const c = new Client();
 		expect(c.initialized()).toBe(true);
 	});
+
+	test('window.document is in the global scope', () => {
+		  const element = document.createElement('div');
+		  expect(element).not.toBeNull();
+	});
 });

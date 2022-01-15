@@ -1,0 +1,21 @@
+{
+  "name": "client",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A client for Applura-hosted back-ends.",
+  "main": "dist/client.js",
+  "scripts": {
+    "build": "esbuild --bundle --minify < src/client.js > dist/client.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.14.11",
+    "jest": "^27.4.7"
+  },
+  "jest": {
+    "transform": {}
+  }
+}

@@ -17,6 +17,13 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "transform": {}
+    "transform": {},
+    "setupFiles": [
+      "./src/setupJest.js"
+    ],
+    "setupFilesAfterEnv": []
+  },
+  "devDependencies": {
+    "jest-fetch-mock": "^3.0.3"
   }
 }

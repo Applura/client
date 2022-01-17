@@ -10,6 +10,10 @@ class Client {
 
 	#lastError = null;
 
+	#state = {
+		pending: true,
+	};
+
 	#subscriber = null;
 
 	constructor() {
@@ -28,8 +32,15 @@ class Client {
 		this.#notify();
 	}
 
+	set #pending(state) {
+		if (this.#state.pending === state) {
+			return;
+		}
+		this.#state.pending = state;
+		this.#notify();
+	}
+
 	#initialize() {
-		console.log(window.document.documentElement.innerHTML);
 		const alternateLink = window.document.querySelector('head link[rel="alternate"]')
 		if (!alternateLink) {
 			throw new UsageError('a client should not be instantiated in a document context that does not have an "alternate" link provided by an Applura server');
@@ -38,7 +49,14 @@ class Client {
 		if (!requestURL) {
 			throw new UsageError('a client should not be instantiated in a document context that does not have an "alternate" link with a valid href');
 		}
-		this.#getURL(requestURL).then(this.#handleResponse).catch(( reason ) => {
+		const scriptElem = window.document.querySelector('script[src="https://dist.applura.com/client/v1"]');
+		if (!scriptElem) {
+			throw new UsageError('this script should be loaded from its canonical URL');
+		}
+		this.#state.assetOrigin = scriptElem.dataset.assetOrigin;
+		this.#getURL(requestURL).then(( resp ) => {
+			return this.#handleResponse(resp);
+		}).catch(( reason ) => {
 			this.#lastError = new UnrecognizedError(reason)
 			this.#notify();
 		});
@@ -52,7 +70,7 @@ class Client {
 		if (!this.#lastData && !this.#lastError) {
 			return;
 		}
-		this.#subscriber([this.#lastData, this.#lastError]);
+		this.#subscriber([this.#lastData, this.#lastError, this.#state]);
 	}
 
 	#getURL(url) {
@@ -62,15 +80,18 @@ class Client {
 			},
 			credentials: "include",
 		})
-		return self.#doRequest(request);
+		return this.#doRequest(request);
 	}
 
 	/**
 	 * @param {Request} request
 	 * @returns {Promise<Response>}
 	 */
-	static #doRequest(request) {
-		return fetch(request);
+	async #doRequest(request) {
+		this.#pending = true;
+		const result = await fetch(request);
+		this.#pending = false;
+		return result;
 	}
 
 	/**
@@ -86,7 +107,7 @@ class Client {
 				this.#lastError = null;
 			} else {
 				let reason = `${response.status} ${response.statusText}`;
-				if (payload.errors && payload.errors[0].detail) {
+				if (payload && payload.errors && payload.errors[0].detail) {
 					reason = `${reason}: ${payload.errors[0].detail}`
 				}
 				if (response.status >= 400 && response.status < 500) {
@@ -124,7 +145,7 @@ async function readPayload(response) {
 		throw new ServerError(`unrecognized content type: ${contentType}`, response);
 	}
 	const payload = await response.json();
-	if (typeof payload !== 'object' || !payload.data) {
+	if (typeof payload !== 'object' || (!payload.data && !payload.errors)) {
 		throw new ServerError('unreadable response body', response);
 	}
 	return payload;

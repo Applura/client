@@ -1,9 +1,9 @@
+import fs from 'fs';
+import path from 'path';
 import { Client } from './client.js';
 
-const indexHTML = `<!DOCTYPE html><html lang="en-US"><head><link class="applura" rel="alternate" href="http://localhost" /><title>Test document</title></head><body></body></html>`
-
 beforeEach(() => {
-	document.documentElement.innerHTML = indexHTML;
+	document.documentElement.innerHTML = fs.readFileSync(path.resolve('src/__testdata__/index.html')).toString();
 });
 
 describe('sanity checks:', () => {
@@ -18,18 +18,36 @@ describe('sanity checks:', () => {
 	});
 });
 
-describe('listen', () => {
-	test('will notify the subscriber when data has been fetched', async () => {
-		//const html = window.document.createElement('html');
-		//const head = window.document.createElement('head');
-		//const alternateLink = window.document.createElement('link');
-		//head.append(alternateLink);
-		//html.append(head);
-		//window.document.append(html);
+describe('Client.listen:', () => {
+	test('should call the subscriber with data, no error, and simple state', async () => {
+		const payload = {
+			data: {
+				attributes: {
+					name: "bob",
+				},
+			},
+		};
+		fetchMock.mockResponse(() => {
+			const body = JSON.stringify(payload);
+			return new Promise( ( res ) => {
+				res({
+					status: 200,
+					headers: {
+						'content-type': 'application/vnd.api+json',
+						'content-length': body.length,
+					},
+					body,
+				});
+			});
+		});
 		const c = new Client();
 		const p = new Promise(( res ) => {
 			c.listen(res);
 		});
-		const [ data, error, { assetOrigin }] = await p;
+		const [data, error, state] = await p;
+		expect(error).toBeNull();
+		expect(data).toMatchObject(payload.data);
+		expect(state.pending).toBe(false);
+		expect(state.assetOrigin).toBe("https://cdn.applura.com/47d2a6c1-de8c-4e3e-ba4c-a8612c2c11ce");
 	});
 })

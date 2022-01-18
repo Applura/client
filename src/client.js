@@ -41,7 +41,7 @@ class Client {
 	}
 
 	#initialize() {
-		const alternateLink = window.document.querySelector('head link[rel="alternate"]')
+		const alternateLink = window.document.querySelector('head link[rel*="alternate"][type="application/vnd.api+json"]')
 		if (!alternateLink) {
 			throw new UsageError('a client should not be instantiated in a document context that does not have an "alternate" link provided by an Applura server');
 		}

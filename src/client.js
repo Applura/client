@@ -54,7 +54,7 @@ class Client {
 			throw new UsageError('this script should be loaded from its canonical URL');
 		}
 		this.#state.assetOrigin = scriptElem.dataset.assetOrigin;
-		this.#getURL(requestURL).then(( resp ) => {
+		this.#getInitialURL(requestURL).then(( resp ) => {
 			return this.#handleResponse(resp);
 		}).catch(( reason ) => {
 			this.#lastError = new UnrecognizedError(reason)
@@ -73,11 +73,8 @@ class Client {
 		this.#subscriber([this.#lastData, this.#lastError, this.#state]);
 	}
 
-	#getURL(url) {
+	#getInitialURL(url) {
 		const request = new Request(url, {
-			headers: {
-				accept: JSONAPIMediaType,
-			},
 			credentials: "include",
 		})
 		return this.#doRequest(request);

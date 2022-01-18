@@ -49,7 +49,7 @@ class Client {
 		if (!requestURL) {
 			throw new UsageError('a client should not be instantiated in a document context that does not have an "alternate" link with a valid href');
 		}
-		const scriptElem = window.document.querySelector('script[src="https://dist.applura.com/client/v1"]');
+		const scriptElem = window.document.querySelector('script[src="https://dist.applura.com/dist/js/client/v1"]');
 		if (!scriptElem) {
 			throw new UsageError('this script should be loaded from its canonical URL');
 		}

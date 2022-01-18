@@ -5,7 +5,7 @@
   "description": "A client for Applura-hosted back-ends.",
   "main": "dist/client.js",
   "scripts": {
-    "build": "esbuild --bundle --minify < src/client.js > dist/client.js",
+    "build": "cd src && esbuild --bundle --minify --format=esm < client.js > ../dist/client.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "keywords": [],

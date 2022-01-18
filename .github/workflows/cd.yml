@@ -1,0 +1,32 @@
+name: Test and deploy
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'npm'
+      - name: install dependencies
+        run: npm i
+      - name: build
+        run: npm run test
+      - name: build
+        run: npm run build
+      - name: configure aws cli
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: put file on s3
+        run: aws s3 cp dist/client.js s3://applura-dist/dist/client/v1

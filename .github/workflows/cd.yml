@@ -29,4 +29,4 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: put file on s3
-        run: aws s3 cp dist/client.js s3://applura-dist/dist/client/v1
+        run: aws s3 cp dist/client.js s3://applura-dist/dist/js/client/v1

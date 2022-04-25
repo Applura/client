@@ -32,6 +32,15 @@ class Client {
 		this.#notify();
 	}
 
+	follow(link) {
+		this.#getInitialURL(link.href).then(( resp ) => {
+			return this.#handleResponse(resp);
+		}).catch(( reason ) => {
+			this.#lastError = new UnrecognizedError(reason)
+			this.#notify();
+		});
+	}
+
 	set #pending(state) {
 		if (this.#state.pending === state) {
 			return;

@@ -38,6 +38,9 @@ function Resource(obj, doc) {
             });
         }
     }
+    if ('links' in obj) {
+        Object.defineProperty(this, 'links', {value: new Links(obj.links), enumerable: true})
+    }
     doc.resources.set(`${obj.type}:${obj.id}`, this);
 }
 
@@ -60,6 +63,48 @@ function Relationship(obj, doc) {
             value: obj.links,
             enumerable: true,
         });
+    }
+}
+
+function Links(obj) {
+    const links = [];
+    for (const key in obj) {
+        links.push(new Link(obj, key));
+    }
+    Object.defineProperty(this, Symbol.iterator, {
+        value: function () {
+            let i = 0;
+            return {
+                next: function () {
+                    return (i++ < links.length) ? {value: links[i]} : {done: true};
+                }
+            }
+        }
+    });
+    Object.defineProperty(this, 'get', {
+        value: function (rel) {
+            return links.find(( link ) => link.rel === rel);
+        },
+    })
+    Object.defineProperty(this, 'getAll', {
+        value: function (rel) {
+            return links.filter(( link ) => link.rel === rel);
+        },
+    });
+    Object.defineProperty(this, 'getAll', {
+        value: function (rel) {
+            return links.some(( link ) => link.rel === rel);
+        },
+    });
+}
+
+function Link(raw, key) {
+    const link = typeof raw === 'string' ? { href: raw } : raw;
+    if (!'rel' in link) {
+        link.rel = key;
+    }
+    for (const attr in link) {
+        Object.defineProperty(this, attr, {value: link[attr], enumerable: true});
     }
 }
 

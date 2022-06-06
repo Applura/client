@@ -33,7 +33,14 @@ async function request(url, options) {
     return fetch(url, init);
 }
 
-export default function client(initialURL) {
+export function bootstrap() {
+    console.assert(window, 'boostrap error: must be called from within a browser context');
+    const link = window.document.querySelector('head link[rel*="alternate"][type="application/vnd.api+json"]');
+    console.assert(link, 'bootstrap error: missing initial resource link');
+    return new Client(link.getAttribute('href'));
+}
+
+export default function Client(initialURL) {
     let start;
     let tracking, trackingErrors;
     let started = new Promise((resolve) => {

@@ -1,0 +1,20 @@
+{
+  "name": "applura-client",
+  "type": "module",
+  "version": "1.0.0-alpha1",
+  "description": "A JavaScript client for Applura APIs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Applura/client.git"
+  },
+  "author": "Applura, Inc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Applura/client/issues"
+  },
+  "homepage": "https://github.com/Applura/client#readme"
+}

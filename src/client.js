@@ -5,7 +5,7 @@ import {
     UsageError
 } from "./errors.js";
 
-import parse from "./parse.js";
+import parse from "./resource.js";
 
 function ensureURL(target, baseURL) {
     if (typeof target === 'string') {

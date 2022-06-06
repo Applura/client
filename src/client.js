@@ -57,7 +57,7 @@ export default function Client(initialURL) {
                 };
             });
             if (first) {
-                this.follow(initialURL);
+                await this.follow(initialURL);
                 first = false;
             }
         }

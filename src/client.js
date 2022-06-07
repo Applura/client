@@ -55,11 +55,11 @@ export default function Client(initialURL) {
                 send = () => {
                     resolve({ resource: lastResource, problem: lastProblem });
                 };
+                if (first) {
+                    this.follow(initialURL);
+                    first = false;
+                }
             });
-            if (first) {
-                await this.follow(initialURL);
-                first = false;
-            }
         }
     };
 
@@ -72,7 +72,7 @@ export default function Client(initialURL) {
         stopped = true;
     };
 
-    this.follow = async function (link, options) {
+    this.follow = async function (link, options = {}) {
         const url = lastURL = ensureURL(link, baseURL);
         const response = lastResponse = await request(url, options);
         if (response.status === 204) {

@@ -91,7 +91,7 @@ function Links(obj) {
             return links.filter(( link ) => link.rel === rel);
         },
     });
-    Object.defineProperty(this, 'getAll', {
+    Object.defineProperty(this, 'has', {
         value: function (rel) {
             return links.some(( link ) => link.rel === rel);
         },

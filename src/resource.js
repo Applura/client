@@ -69,7 +69,7 @@ function Relationship(obj, doc) {
 function Links(obj) {
     const links = [];
     for (const key in obj) {
-        links.push(new Link(obj, key));
+        links.push(new Link(obj[key], key));
     }
     Object.defineProperty(this, Symbol.iterator, {
         value: function () {
@@ -100,7 +100,7 @@ function Links(obj) {
 
 function Link(raw, key) {
     const link = typeof raw === 'string' ? { href: raw } : raw;
-    if (!'rel' in link) {
+    if ('rel' in link === false) {
         link.rel = key;
     }
     for (const attr in link) {
@@ -110,6 +110,6 @@ function Link(raw, key) {
 
 function resolveFrom(doc) {
     return (identifier) => {
-        doc.resources.get(`${identifier.type}:${identifier.id}`);
+        return doc.resources.get(`${identifier.type}:${identifier.id}`);
     };
 }

@@ -74,6 +74,18 @@ export default function Client(initialURL) {
     let send;
     let lastURL, lastResource, lastProblem, lastResponse;
     let baseURL = lastURL = ensureURL(initialURL)
+    let highWater = 0;
+
+    const update = ( id, { resource, problem, response, url } ) => {
+        if (id < highWater) {
+            return;
+        }
+        lastResource = resource || lastResource;
+        lastProblem = problem || lastProblem;
+        lastResponse = response || lastResponse;
+        lastURL = url || lastURL;
+        send();
+    }
 
     this.start = async function* () {
         tracking = true;
@@ -101,47 +113,53 @@ export default function Client(initialURL) {
     };
 
     this.follow = async function (link, options = {}) {
-        const url = lastURL = ensureURL(link, baseURL);
-        const response = lastResponse = await request(url, options);
+        const id = ++highWater;
+        const url = ensureURL(link, baseURL);
+        const response = await request(url, options);
         if (response.status === 204) {
             return true;
         }
         if (!response.headers.has('content-type')) {
-            lastProblem = new MissingContentTypeError('the server responded without specifying a MIME type via the content-type HTTP response header', {response});
-            send();
+            const problem = new MissingContentTypeError('the server responded without specifying a MIME type via the content-type HTTP response header', {response});
+            update(id, { problem, response, url });
+            return false;
         }
         const mimeType = response.headers.get('content-type');
         if (!mimeType.startsWith('application/vnd.api+json')) {
-            lastProblem = new UnexpectedContentTypeError(response, `the server responded in with an unrecognizable media type: ${mimeType}`, {response});
-            send();
+            const problem = new UnexpectedContentTypeError(response, `the server responded in with an unrecognizable media type: ${mimeType}`, {response});
+            update(id, { problem, response, url });
+            return false;
         }
         let doc
         try {
             doc = await response.json();
         } catch (e) {
-            lastProblem = new UnexpectedContentError(`could not parse response as JSON despite the content-type header claiming to be ${mimeType}: ${e.reason}`, { response, cause: e });
-            send();
+            const problem = new UnexpectedContentError(`could not parse response as JSON despite the content-type header claiming to be ${mimeType}: ${e.reason}`, { response, cause: e });
+            update(id, { problem, response, url });
             return false;
         }
         if (response.ok) {
+            let resource;
             try {
-                lastResource = parse(doc);
+                resource = parse(doc);
             } catch (e) {
                 throw new ImplementationError('could not parse JSON:API document', {cause: e});
             }
             if (navigate) {
-                addToHistory(lastURL, ensureURL(doc?.links?.alternate?.href || window.location.href));
+                if (id === highWater) {
+                    addToHistory(url, ensureURL(doc?.links?.alternate?.href || window.location.href));
+                }
             }
-            send();
+            update(id, { resource, response, url });
             return true;
         }
         const errorDetails = (doc.errors || []).filter((e) => e.detail).map((e) => `detail: ${e.detail}`)
         if (response.status >= 400 && response.status <= 499) {
-            lastProblem = new RequestError(['request error', `${response.status} ${response.statusText}`, ...errorDetails].join(': '), {doc, response})
-            send();
+            const problem = new RequestError(['request error', `${response.status} ${response.statusText}`, ...errorDetails].join(': '), {doc, response})
+            update(id, { problem, response, url });
         } else if (response.status >= 500 && response.status <= 599) {
-            lastProblem = new ServerError(response, ['response error', `${response.status} ${response.statusText}`, ...errorDetails], {doc, response});
-            send();
+            const problem = new ServerError(response, ['response error', `${response.status} ${response.statusText}`, ...errorDetails], {doc, response});
+            update(id, { problem, response, url });
         } else {
             throw new ImplementationError(`unhandled response type: ${response.status} ${response.statusText}`);
         }

@@ -1,7 +1,7 @@
-import {UsageError} from "./errors.js";
+import { UsageError } from "./errors.js";
 
 export default function parse(doc) {
-    if (!'data' in doc) {
+    if (!('data' in doc)) {
         throw new UsageError('the parse function only supports JSON:API documents with primary data');
     }
     return (new Doc(doc)).primary;

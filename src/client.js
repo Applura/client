@@ -18,6 +18,24 @@ function ensureURL(target, baseURL) {
     throw new UsageError('url target must be a string, an URL object, or an object with an href property');
 }
 
+function addToHistory(apiURL, browserURL) {
+    if (history?.state?.url) {
+        history.pushState({ url: apiURL.href }, '', browserURL);
+    } else {
+        history.replaceState({ url: apiURL.href }, '', browserURL);
+    }
+}
+
+/**
+ * This is an internal property that can be disabled on popstate to avoid adding history.
+ *
+ * For example, is used to disable pushing to history on an initial page load inside the
+ * bootstrap function.
+ *
+ * @type {boolean}
+ */
+let navigate = true;
+
 async function request(url, options) {
     if (options.credentials) {
         throw new UsageError('cannot change client credentials behavior. default value: "include"')
@@ -37,7 +55,17 @@ export function bootstrap() {
     console.assert(!!window, 'boostrap error: must be called from within a browser context');
     const link = window.document.querySelector('head link[rel*="alternate"][type="application/vnd.api+json"]');
     console.assert(!!link, 'bootstrap error: missing initial resource link');
-    return new Client(link.getAttribute('href'));
+    const client = new Client(link.getAttribute('href'));
+    window.addEventListener('popstate', (event) => {
+        // Not navigating on a "back".
+        if ('url' in event.state) {
+            navigate = false;
+            client.follow(event.state.url, {}).finally(() => {
+                navigate = true;
+            });
+        }
+    });
+    return client;
 }
 
 export default function Client(initialURL) {
@@ -98,10 +126,13 @@ export default function Client(initialURL) {
         if (response.ok) {
             try {
                 lastResource = parse(doc);
-                send();
             } catch (e) {
                 throw new ImplementationError('could not parse JSON:API document', {cause: e});
             }
+            if (navigate) {
+                addToHistory(lastURL, ensureURL(doc?.links?.alternate?.href || window.location.href));
+            }
+            send();
             return true;
         }
         const errorDetails = (doc.errors || []).filter((e) => e.detail).map((e) => `detail: ${e.detail}`)

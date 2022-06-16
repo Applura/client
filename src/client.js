@@ -28,6 +28,10 @@ function addToHistory(apiURL, browserURL) {
 
 /**
  * This is an internal property that can be disabled on popstate to avoid adding history.
+ *
+ * For example, is used to disable pushing to history on an initial page load inside the
+ * bootstrap function.
+ *
  * @type {boolean}
  */
 let navigate = true;
@@ -56,7 +60,7 @@ export function bootstrap() {
         // Not navigating on a "back".
         if ('url' in event.state) {
             navigate = false;
-            client.follow(event.state.url, {}).then(() => {
+            client.follow(event.state.url, {}).finally(() => {
                 navigate = true;
             });
         }

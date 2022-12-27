@@ -1,10 +1,11 @@
 {
   "name": "applura-client",
   "type": "module",
-  "version": "1.0.0-alpha1",
+  "version": "1.0.0-alpha2",
   "description": "A JavaScript client for Applura APIs",
   "main": "index.js",
   "scripts": {
+    "build": "rollup index.js --file dist/client.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -16,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/Applura/client/issues"
   },
-  "homepage": "https://github.com/Applura/client#readme"
+  "homepage": "https://github.com/Applura/client#readme",
+  "dependencies": {
+    "rollup": "^3.8.1"
+  }
 }

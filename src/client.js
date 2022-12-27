@@ -147,7 +147,7 @@ export default function Client(initialURL) {
             }
             if (navigate) {
                 if (id === highWater) {
-                    addToHistory(url, ensureURL(doc?.links?.alternate?.href || window.location.href));
+                    addToHistory(url, ensureURL(doc?.data?.links?.alternate?.href || window.location.href));
                 }
             }
             update(id, { resource, response, url });

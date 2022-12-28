@@ -55,7 +55,11 @@ export function bootstrap() {
     console.assert(!!window, 'boostrap error: must be called from within a browser context');
     const link = window.document.querySelector('head link[rel*="alternate"][type="application/vnd.api+json"]');
     console.assert(!!link, 'bootstrap error: missing initial resource link');
-    const client = new Client(link.getAttribute('href'));
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const initialURL = isLocal
+        ? new URL( `${window.location.pathname}${window.location.search}${window.location.hash}`, link.getAttribute('href'))
+        : new URL(link.getAttribute('href'));
+    const client = new Client(initialURL.href);
     window.addEventListener('popstate', (event) => {
         // Not navigating on a "back".
         if ('url' in event.state) {

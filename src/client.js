@@ -12,10 +12,10 @@ function ensureURL(target, baseURL) {
         return new URL(target, baseURL);
     } else if (target instanceof URL) {
         return target;
-    } else if (target.href) {
+    } else if ('href' in target) {
         return new URL(target.href, baseURL);
     }
-    throw new UsageError('url target must be a string, an URL object, or an object with an href property');
+    throw new UsageError('url target must be a string, a URL object, or an object with an href property');
 }
 
 function addToHistory(apiURL, browserURL) {
@@ -55,7 +55,7 @@ export function bootstrap() {
     console.assert(!!window, 'boostrap error: must be called from within a browser context');
     const link = window.document.querySelector('head link[rel*="alternate"][type="application/vnd.api+json"]');
     console.assert(!!link, 'bootstrap error: missing initial resource link');
-    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const isLocal = ['http:', 'https:'].includes(window.location.protocol) && ['localhost', '127.0.0.1'].includes(window.location.hostname);
     const initialURL = isLocal
         ? new URL( `${window.location.pathname}${window.location.search}${window.location.hash}`, link.getAttribute('href'))
         : new URL(link.getAttribute('href'));
@@ -119,6 +119,10 @@ export default function Client(initialURL) {
     this.follow = async function (link, options = {}) {
         const id = ++highWater;
         const url = ensureURL(link, baseURL);
+        if (url.origin !== baseURL.origin || typeof link === 'object' && 'type' in link && link.type.startsWith('text/html')) {
+            window.location = url;
+            return false;
+        }
         const response = await request(url, options);
         if (response.status === 204) {
             return true;

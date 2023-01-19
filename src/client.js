@@ -155,7 +155,10 @@ export default function Client(initialURL) {
             }
             if (navigate) {
                 if (id === highWater) {
-                    addToHistory(url, ensureURL(doc?.data?.links?.alternate?.href || window.location.href));
+                    const htmlAlternateLink = Object.entries(doc?.data?.links || {}).find(([key, link]) => {
+                        return (link?.rel || key) === 'alternate' && (link?.type || '').startsWith('text/html');
+                    });
+                    addToHistory(url, ensureURL(htmlAlternateLink || window.location.href));
                 }
             }
             update(id, { resource, response, url });

@@ -51,12 +51,30 @@ async function request(url, options) {
     return fetch(url, init);
 }
 
+/**
+ * Determines if the given URL is a local URL using a few heuristics.
+ *
+ * If the URL is not HTTP, for instance a data: URI, then this method returns false.
+ *
+ * If the URL's hostname (which does not include the port) is localhost, 127.0.0.1, or ends with .test, the hostname is
+ * assumed to be "local", i.e. targeting a server on the developer's own machine. If the hostname is any other value,
+ * then this method returns false.
+ *
+ * @param {Location} url
+ *
+ * @return {boolean}
+ */
+function isLocalURL(url) {
+    const isHTTP = ['http:', 'https:'].includes(url.protocol);
+    const isLocalHost = url.hostname.endsWith('.test') || ['localhost', '127.0.0.1'].includes(url.hostname);
+    return isHTTP && isLocalHost;
+}
+
 export function bootstrap() {
     console.assert(!!window, 'boostrap error: must be called from within a browser context');
     const link = window.document.querySelector('head link[rel*="alternate"][type="application/vnd.api+json"]');
     console.assert(!!link, 'bootstrap error: missing initial resource link');
-    const isLocal = ['http:', 'https:'].includes(window.location.protocol) && ['localhost', '127.0.0.1'].includes(window.location.hostname);
-    const initialURL = isLocal
+    const initialURL = isLocalURL(window.location)
         ? new URL( `${window.location.pathname}${window.location.search}${window.location.hash}`, link.getAttribute('href'))
         : new URL(link.getAttribute('href'));
     const client = new Client(initialURL.href);

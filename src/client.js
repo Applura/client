@@ -97,6 +97,7 @@ export default function Client(initialURL) {
     let lastURL, lastResource, lastProblem, lastResponse;
     let baseURL = lastURL = ensureURL(initialURL)
     let highWater = 0;
+    let isLivePreviewListenerRegistered = false;
 
     const update = ( id, { resource, problem, response, url } ) => {
         if (id < highWater) {
@@ -108,6 +109,23 @@ export default function Client(initialURL) {
         lastURL = url || lastURL;
         send();
     }
+
+    const registerLivePreviewListener = (livePreviewConfig) => {
+        const { origin } = livePreviewConfig;
+        if (origin) {
+            window.addEventListener('message', (message) => {
+                if (message.origin !== origin) {
+                    return;
+                }
+                const { type } = message.data;
+                if (type === 'update') {
+                    const { targetURL } = message.data;
+                    this.follow(targetURL);
+                }
+            });
+            isLivePreviewListenerRegistered = true;
+        }
+    };
 
     this.start = async function* () {
         tracking = true;
@@ -171,12 +189,19 @@ export default function Client(initialURL) {
             } catch (e) {
                 throw new ImplementationError('could not parse JSON:API document', {cause: e});
             }
+            const livePreview = doc?.meta?.applura?.livePreview;
+            if (livePreview && !isLivePreviewListenerRegistered) {
+                registerLivePreviewListener(livePreview)
+            }
             if (navigate) {
                 if (id === highWater) {
-                    const htmlAlternateLink = Object.entries(doc?.data?.links || {}).find(([key, link]) => {
+                    const htmlAlternateLinkEntry = Object.entries(doc?.data?.links || {}).find(([key, link]) => {
                         return (link?.rel || key) === 'alternate' && (link?.type || '').startsWith('text/html');
                     });
-                    addToHistory(url, ensureURL(htmlAlternateLink || window.location.href));
+                    if (htmlAlternateLinkEntry) {
+                        const [, htmlAlternateLink] = htmlAlternateLinkEntry;
+                        addToHistory(url, ensureURL(htmlAlternateLink || window.location.href));
+                    }
                 }
             }
             update(id, { resource, response, url });

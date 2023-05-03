@@ -103,10 +103,10 @@ export default function Client(initialURL) {
         if (id < highWater) {
             return;
         }
-        lastResource = resource || lastResource;
-        lastProblem = problem || lastProblem;
-        lastResponse = response || lastResponse;
-        lastURL = url || lastURL;
+        lastResource = resource !== undefined ? resource : lastResource;
+        lastProblem = problem !== undefined ? problem : lastProblem;
+        lastResponse = response !== undefined ? response : lastResponse;
+        lastURL = url !== undefined ? url : lastURL;
         send();
     }
 
@@ -161,6 +161,7 @@ export default function Client(initialURL) {
         }
         const response = await request(url, options);
         if (response.status === 204) {
+            update(id, { resource: null, response, url });
             return true;
         }
         if (!response.headers.has('content-type')) {

@@ -99,14 +99,13 @@ export default function Client(initialURL) {
     let highWater = 0;
     let isLivePreviewListenerRegistered = false;
 
-    const update = ( id, { resource, problem, response, url } ) => {
+    const update = ( id, { resource, problem, url } ) => {
         if (id < highWater) {
             return;
         }
-        lastResource = resource !== undefined ? resource : lastResource;
-        lastProblem = problem !== undefined ? problem : lastProblem;
-        lastResponse = response !== undefined ? response : lastResponse;
-        lastURL = url !== undefined ? url : lastURL;
+        lastResource = resource || lastResource;
+        lastProblem = problem || lastProblem;
+        lastURL = url || lastURL;
         send();
     }
 
@@ -159,20 +158,19 @@ export default function Client(initialURL) {
             window.location = url;
             return false;
         }
-        const response = await request(url, options);
+        const response = lastResponse = await request(url, options);
         if (response.status === 204) {
-            update(id, { resource: null, response, url });
             return true;
         }
         if (!response.headers.has('content-type')) {
             const problem = new MissingContentTypeError('the server responded without specifying a MIME type via the content-type HTTP response header', {response});
-            update(id, { problem, response, url });
+            update(id, { problem, url });
             return false;
         }
         const mimeType = response.headers.get('content-type');
         if (!mimeType.startsWith('application/vnd.api+json')) {
             const problem = new UnexpectedContentTypeError(response, `the server responded in with an unrecognizable media type: ${mimeType}`, {response});
-            update(id, { problem, response, url });
+            update(id, { problem, url });
             return false;
         }
         let doc
@@ -180,7 +178,7 @@ export default function Client(initialURL) {
             doc = await response.json();
         } catch (e) {
             const problem = new UnexpectedContentError(`could not parse response as JSON despite the content-type header claiming to be ${mimeType}: ${e.reason}`, { response, cause: e });
-            update(id, { problem, response, url });
+            update(id, { problem, url });
             return false;
         }
         if (response.ok) {
@@ -205,16 +203,16 @@ export default function Client(initialURL) {
                     }
                 }
             }
-            update(id, { resource, response, url });
+            update(id, { resource, url });
             return true;
         }
         const errorDetails = (doc.errors || []).filter((e) => e.detail).map((e) => `detail: ${e.detail}`)
         if (response.status >= 400 && response.status <= 499) {
             const problem = new RequestError(['request error', `${response.status} ${response.statusText}`, ...errorDetails].join(': '), {doc, response})
-            update(id, { problem, response, url });
+            update(id, { problem, url });
         } else if (response.status >= 500 && response.status <= 599) {
             const problem = new ServerError(response, ['response error', `${response.status} ${response.statusText}`, ...errorDetails], {doc, response});
-            update(id, { problem, response, url });
+            update(id, { problem, url });
         } else {
             throw new ImplementationError(`unhandled response type: ${response.status} ${response.statusText}`);
         }

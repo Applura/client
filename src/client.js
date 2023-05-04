@@ -135,7 +135,7 @@ export default function Client(initialURL) {
                     resolve({ resource: lastResource, problem: lastProblem });
                 };
                 if (first) {
-                    this.follow(initialURL);
+                    this.follow(lastURL);
                     first = false;
                 }
             });

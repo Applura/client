@@ -4,11 +4,10 @@ import TestServer from "./internal/testing/server.js";
 
 Deno.test('Client', async (t) => {
     const serverOptions = { hostname: '0.0.0.0', port: 3003 };
+    const serverURL = `http://${serverOptions.hostname}:${serverOptions.port}`;
     const server = new TestServer(serverOptions);
-    const client = new Client(`http://${serverOptions.hostname}:${serverOptions.port}`);
 
     const serverShutdown = server.start();
-    const loop = client.start();
 
     // doTest wraps t.step in order to disable the sanitizeOps and sanitizeResources options by default. These must be
     // disabled because the server (in the Deno standard library) leaves a hanging async operation. This is an upstream
@@ -17,58 +16,85 @@ Deno.test('Client', async (t) => {
 
     await doTest('can process HTTP responses', async (t) => {
         await t.step('200 OK', async () => {
-            server.respondWith(new Response('{"data":{"type":"empty","id":"resource"}}', {
-                status: 200,
-                headers: {
-                    'content-type': 'application/vnd.api+json',
+            const client = new Client(serverURL);
+            const loop = client.start();
+            server.respondWith(new Response(
+                '{"data":{"type":"empty","id":"resource"}}',
+                {
+                    status: 200,
+                    headers: {
+                        'content-type': 'application/vnd.api+json',
+                    },
                 },
-            }))
+            ))
             const { resource, problem } = (await loop.next()).value;
             const {status} = client.response();
             assertEquals(status, 200);
             assertEquals(resource.type, 'empty');
             assertEquals(problem, undefined);
+            client.stop();
         });
 
         // A 204 No Content response should not trigger a new event loop, but the latest response should be accessible.
-        await t.step('204 No Content', async () => {
-            // sink connects to the event loop and counts the number of events that it dispatches. The sink promise will
-            // resolve when disconnect is called.
-            let disconnect;
-            const sink = new Promise(async (resolve) => {
-                let count = 0;
-                disconnect = () => {
-                    resolve(count);
-                };
-                for await (const event of loop) {
-                    count++;
-                }
+        await t.step('204 No Content', async (t) => {
+            const client = new Client(serverURL);
+            const tests = Object.entries({
+                'preliminary request': async () => {
+                    assertEquals(client.response().status, 200);
+                    assertEquals(client.resource().id, '200 resource');
+                },
+                'primary request': async () => {
+                    assertEquals(client.response().status, 204);
+                    assertEquals(client.resource().id, '200 resource');
+                },
+                'closing request': async () => {
+                    assertEquals(client.response().status, 200);
+                    assertEquals(client.resource().id, 'another 200 resource');
+                },
             });
-            server.respondWith(new Response('{"data":{"type":"myType","id":"200 resource"}}', {
-                status: 200,
-                headers: {
-                    'content-type': 'application/vnd.api+json',
-                },
-            }))
-            await client.refresh();
-            assertEquals(client.response().status, 200);
-            assertEquals(client.resource().id, '200 resource');
-            // Now, set up and request a 204 response. The client's last response should be updated, but the last
-            // resource shouldn't change.
-            server.respondWith(new Response(null, {
-                status: 204,
-                headers: {
-                    'content-type': 'application/vnd.api+json',
-                },
-            }))
-            await client.refresh();
-            assertEquals(client.response().status, 204);
-            assertEquals(client.resource().id, '200 resource');
-            // Disconnect the sink and wait for it to return the count of how many events it received.
-            disconnect();
-            const count = await sink;
-            // It should have only received a single event since the 204 response should not have triggered a new event.
-            assertEquals(count, 1);
+            server.queueResponses([
+                new Response('{"data":{"type":"myType","id":"200 resource"}}', {
+                    status: 200,
+                    headers: {
+                        'content-type': 'application/vnd.api+json',
+                    },
+                }),
+                new Response(null, {
+                    status: 204,
+                    headers: {
+                        'content-type': 'application/vnd.api+json',
+                    },
+                }),
+                new Response('{"data":{"type":"myType","id":"another 200 resource"}}', {
+                    status: 200,
+                    headers: {
+                        'content-type': 'application/vnd.api+json',
+                    },
+                }),
+            ]);
+            const performTest = async ([name, test]) => {
+                [name, test] = tests[testIndex];
+                await t.step(name, test);
+            }
+            let testIndex = 0;
+            let eventCount = 0;
+            for await (const event of client.start()) {
+                eventCount++;
+                await performTest(tests[testIndex]);
+                testIndex++
+                // Since the 204 response won't advance this loop, its test must be triggered as a special case.
+                if (tests[testIndex] && tests[testIndex][0] === 'primary request') {
+                    await client.follow(serverURL);
+                    await performTest(tests[testIndex]);
+                    testIndex++
+                }
+                if (testIndex === tests.length) {
+                    client.stop();
+                    break;
+                }
+                client.follow(serverURL);
+            }
+            assertEquals(eventCount, 2);
         });
     });
 

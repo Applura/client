@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup index.js --file dist/v2.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "deno test --allow-net"
   },
   "repository": {
     "type": "git",

@@ -42,15 +42,15 @@ Deno.test("Client", async (t) => {
     await t.step("204 No Content", async (t) => {
       const client = new Client(serverURL);
       const tests = Object.entries({
-        "preliminary request": async () => {
+        "preliminary request": () => {
           assertEquals(client.response().status, 200);
           assertEquals(client.resource().id, "200 resource");
         },
-        "primary request": async () => {
+        "primary request": () => {
           assertEquals(client.response().status, 204);
           assertEquals(client.resource().id, "200 resource");
         },
-        "closing request": async () => {
+        "closing request": () => {
           assertEquals(client.response().status, 200);
           assertEquals(client.resource().id, "another 200 resource");
         },
@@ -78,7 +78,7 @@ Deno.test("Client", async (t) => {
       const performTest = async ([name, test]) => await t.step(name, test);
       let testIndex = 0;
       let eventCount = 0;
-      for await (const event of client.start()) {
+      for await (const _ of client.start()) {
         eventCount++;
         await performTest(tests[testIndex]);
         testIndex++;

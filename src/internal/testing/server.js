@@ -4,6 +4,7 @@ export default function TestServer({ hostname, port }) {
   const notImplemented = new Response(null, { status: 501 });
   const responses = [];
   const server = new Server({
+    hostname,
     port,
     handler: () => responses.shift() || notImplemented,
   });

@@ -41,7 +41,7 @@ function addToHistory(apiURL, browserURL) {
  */
 let navigate = true;
 
-async function request(url, options) {
+function request(url, options) {
   if (options.credentials) {
     throw new UsageError(
       'cannot change client credentials behavior. default value: "include"',
@@ -94,7 +94,8 @@ export function bootstrap() {
     )
     : new URL(link.getAttribute("href"));
   const client = new Client(initialURL.href);
-  window.addEventListener("popstate", (event) => {
+  // Register a global listener for history updates.
+  addEventListener("popstate", (event) => {
     // Not navigating on a "back".
     if ("url" in event.state) {
       navigate = false;
@@ -111,9 +112,9 @@ export default function Client(initialURL) {
   let stopped = false;
   let send;
   let lastURL, lastResource, lastProblem, lastResponse;
-  let baseURL = lastURL = ensureURL(initialURL);
   let highWater = 0;
   let isLivePreviewListenerRegistered = false;
+  const baseURL = lastURL = ensureURL(initialURL);
 
   const update = (id, { resource, problem, url }) => {
     if (id < highWater) {
@@ -128,7 +129,8 @@ export default function Client(initialURL) {
   const registerLivePreviewListener = (livePreviewConfig) => {
     const { origin } = livePreviewConfig;
     if (origin) {
-      window.addEventListener("message", (message) => {
+      // Register a global listener for live preview updates.
+      addEventListener("message", (message) => {
         if (message.origin !== origin) {
           return;
         }

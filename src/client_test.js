@@ -1,6 +1,10 @@
 import Client from "./client.js";
-import { assertEquals } from "https://deno.land/std@0.185.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertInstanceOf,
+} from "https://deno.land/std@0.185.0/testing/asserts.ts";
 import TestServer from "./internal/testing/server.js";
+import { UnexpectedContentTypeError } from "./errors.js";
 
 Deno.test("Client", async (t) => {
   const serverOptions = { hostname: "0.0.0.0", port: 3003 };
@@ -95,6 +99,25 @@ Deno.test("Client", async (t) => {
         client.follow(serverURL);
       }
       assertEquals(eventCount, 2);
+    });
+  });
+
+  await doTest("can process unexpected HTTP responses", async (t) => {
+    await t.step("unrecognized content-type header", async () => {
+      const client = new Client(serverURL);
+      const loop = client.start();
+      server.respondWith(
+        new Response(
+          '{"data":{"type":"myType","id":"bad resource"}}',
+          { headers: { "content-type": "foobar" } },
+        ),
+      );
+      const { resource, problem } = (await loop.next()).value;
+      const { status } = client.response();
+      assertEquals(status, 200);
+      assertEquals(resource, undefined);
+      assertInstanceOf(problem, UnexpectedContentTypeError);
+      client.stop();
     });
   });
 

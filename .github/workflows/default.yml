@@ -32,10 +32,10 @@ jobs:
           deno-version: v1.x
 
       - name: Verify formatting
-        run: deno fmt --check
+        run: npm run fmt -- --check
 
       - name: Run linter
-        run: deno lint
+        run: npm run lint
 
       - name: Run tests
         run: npm test

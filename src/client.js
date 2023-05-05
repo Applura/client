@@ -1,29 +1,34 @@
 import {
-    ImplementationError,
-    MissingContentTypeError, RequestError, ServerError, UnexpectedContentError,
-    UnexpectedContentTypeError,
-    UsageError
+  ImplementationError,
+  MissingContentTypeError,
+  RequestError,
+  ServerError,
+  UnexpectedContentError,
+  UnexpectedContentTypeError,
+  UsageError,
 } from "./errors.js";
 
 import parse from "./resource.js";
 
 function ensureURL(target, baseURL) {
-    if (typeof target === 'string') {
-        return new URL(target, baseURL);
-    } else if (target instanceof URL) {
-        return target;
-    } else if ('href' in target) {
-        return new URL(target.href, baseURL);
-    }
-    throw new UsageError('url target must be a string, a URL object, or an object with an href property');
+  if (typeof target === "string") {
+    return new URL(target, baseURL);
+  } else if (target instanceof URL) {
+    return target;
+  } else if ("href" in target) {
+    return new URL(target.href, baseURL);
+  }
+  throw new UsageError(
+    "url target must be a string, a URL object, or an object with an href property",
+  );
 }
 
 function addToHistory(apiURL, browserURL) {
-    if (history?.state?.url) {
-        history.pushState({ url: apiURL.href }, '', browserURL);
-    } else {
-        history.replaceState({ url: apiURL.href }, '', browserURL);
-    }
+  if (history?.state?.url) {
+    history.pushState({ url: apiURL.href }, "", browserURL);
+  } else {
+    history.replaceState({ url: apiURL.href }, "", browserURL);
+  }
 }
 
 /**
@@ -37,18 +42,20 @@ function addToHistory(apiURL, browserURL) {
 let navigate = true;
 
 async function request(url, options) {
-    if (options.credentials) {
-        throw new UsageError('cannot change client credentials behavior. default value: "include"')
-    }
-    const init = {
-        ...options,
-        credentials: 'include',
-        headers: {
-            ...(options.headers || {}),
-            'accept': 'application/vnd.api+json',
-        },
-    };
-    return fetch(url, init);
+  if (options.credentials) {
+    throw new UsageError(
+      'cannot change client credentials behavior. default value: "include"',
+    );
+  }
+  const init = {
+    ...options,
+    credentials: "include",
+    headers: {
+      ...(options.headers || {}),
+      "accept": "application/vnd.api+json",
+    },
+  };
+  return fetch(url, init);
 }
 
 /**
@@ -65,169 +72,214 @@ async function request(url, options) {
  * @return {boolean}
  */
 function isLocalURL(url) {
-    const isHTTP = ['http:', 'https:'].includes(url.protocol);
-    const isLocalHost = url.hostname.endsWith('.test') || ['localhost', '127.0.0.1'].includes(url.hostname);
-    return isHTTP && isLocalHost;
+  const isHTTP = ["http:", "https:"].includes(url.protocol);
+  const isLocalHost = url.hostname.endsWith(".test") ||
+    ["localhost", "127.0.0.1"].includes(url.hostname);
+  return isHTTP && isLocalHost;
 }
 
 export function bootstrap() {
-    console.assert(!!window, 'boostrap error: must be called from within a browser context');
-    const link = window.document.querySelector('head link[rel*="alternate"][type="application/vnd.api+json"]');
-    console.assert(!!link, 'bootstrap error: missing initial resource link');
-    const initialURL = isLocalURL(window.location)
-        ? new URL( `${window.location.pathname}${window.location.search}${window.location.hash}`, link.getAttribute('href'))
-        : new URL(link.getAttribute('href'));
-    const client = new Client(initialURL.href);
-    window.addEventListener('popstate', (event) => {
-        // Not navigating on a "back".
-        if ('url' in event.state) {
-            navigate = false;
-            client.follow(event.state.url, {}).finally(() => {
-                navigate = true;
-            });
-        }
-    });
-    return client;
+  console.assert(
+    !!window,
+    "boostrap error: must be called from within a browser context",
+  );
+  const link = window.document.querySelector(
+    'head link[rel*="alternate"][type="application/vnd.api+json"]',
+  );
+  console.assert(!!link, "bootstrap error: missing initial resource link");
+  const initialURL = isLocalURL(window.location)
+    ? new URL(
+      `${window.location.pathname}${window.location.search}${window.location.hash}`,
+      link.getAttribute("href"),
+    )
+    : new URL(link.getAttribute("href"));
+  const client = new Client(initialURL.href);
+  window.addEventListener("popstate", (event) => {
+    // Not navigating on a "back".
+    if ("url" in event.state) {
+      navigate = false;
+      client.follow(event.state.url, {}).finally(() => {
+        navigate = true;
+      });
+    }
+  });
+  return client;
 }
 
 export default function Client(initialURL) {
-    let tracking;
-    let stopped = false;
-    let send;
-    let lastURL, lastResource, lastProblem, lastResponse;
-    let baseURL = lastURL = ensureURL(initialURL)
-    let highWater = 0;
-    let isLivePreviewListenerRegistered = false;
+  let tracking;
+  let stopped = false;
+  let send;
+  let lastURL, lastResource, lastProblem, lastResponse;
+  let baseURL = lastURL = ensureURL(initialURL);
+  let highWater = 0;
+  let isLivePreviewListenerRegistered = false;
 
-    const update = ( id, { resource, problem, url } ) => {
-        if (id < highWater) {
-            return;
-        }
-        lastResource = resource || lastResource;
-        lastProblem = problem || lastProblem;
-        lastURL = url || lastURL;
-        send();
+  const update = (id, { resource, problem, url }) => {
+    if (id < highWater) {
+      return;
     }
+    lastResource = resource || lastResource;
+    lastProblem = problem || lastProblem;
+    lastURL = url || lastURL;
+    send();
+  };
 
-    const registerLivePreviewListener = (livePreviewConfig) => {
-        const { origin } = livePreviewConfig;
-        if (origin) {
-            window.addEventListener('message', (message) => {
-                if (message.origin !== origin) {
-                    return;
-                }
-                const { type } = message.data;
-                if (type === 'update') {
-                    const { targetURL } = message.data;
-                    this.follow(targetURL);
-                }
+  const registerLivePreviewListener = (livePreviewConfig) => {
+    const { origin } = livePreviewConfig;
+    if (origin) {
+      window.addEventListener("message", (message) => {
+        if (message.origin !== origin) {
+          return;
+        }
+        const { type } = message.data;
+        if (type === "update") {
+          const { targetURL } = message.data;
+          this.follow(targetURL);
+        }
+      });
+      isLivePreviewListenerRegistered = true;
+    }
+  };
+
+  this.start = async function* () {
+    tracking = true;
+    let first = true;
+    while (tracking) {
+      yield new Promise((resolve) => {
+        send = () => {
+          resolve({ resource: lastResource, problem: lastProblem });
+        };
+        if (first) {
+          this.follow(lastURL);
+          first = false;
+        }
+      });
+    }
+  };
+
+  this.stop = function () {
+    if (stopped) {
+      return;
+    }
+    tracking = false;
+    send();
+    stopped = true;
+  };
+
+  this.follow = async function (link, options = {}) {
+    const id = ++highWater;
+    const url = ensureURL(link, baseURL);
+    if (
+      url.origin !== baseURL.origin ||
+      typeof link === "object" && "type" in link &&
+        link.type.startsWith("text/html")
+    ) {
+      window.location = url;
+      return false;
+    }
+    const response = lastResponse = await request(url, options);
+    if (response.status === 204) {
+      return true;
+    }
+    if (!response.headers.has("content-type")) {
+      const problem = new MissingContentTypeError(
+        "the server responded without specifying a MIME type via the content-type HTTP response header",
+        { response },
+      );
+      update(id, { problem, url });
+      return false;
+    }
+    const mimeType = response.headers.get("content-type");
+    if (!mimeType.startsWith("application/vnd.api+json")) {
+      const problem = new UnexpectedContentTypeError(
+        response,
+        `the server responded in with an unrecognizable media type: ${mimeType}`,
+        { response },
+      );
+      update(id, { problem, url });
+      return false;
+    }
+    let doc;
+    try {
+      doc = await response.json();
+    } catch (e) {
+      const problem = new UnexpectedContentError(
+        `could not parse response as JSON despite the content-type header claiming to be ${mimeType}: ${e.reason}`,
+        { response, cause: e },
+      );
+      update(id, { problem, url });
+      return false;
+    }
+    if (response.ok) {
+      let resource;
+      try {
+        resource = parse(doc);
+      } catch (e) {
+        throw new ImplementationError("could not parse JSON:API document", {
+          cause: e,
+        });
+      }
+      const livePreview = doc?.meta?.applura?.livePreview;
+      if (livePreview && !isLivePreviewListenerRegistered) {
+        registerLivePreviewListener(livePreview);
+      }
+      if (navigate) {
+        if (id === highWater) {
+          const htmlAlternateLinkEntry = Object.entries(doc?.data?.links || {})
+            .find(([key, link]) => {
+              return (link?.rel || key) === "alternate" &&
+                (link?.type || "").startsWith("text/html");
             });
-            isLivePreviewListenerRegistered = true;
+          if (htmlAlternateLinkEntry) {
+            const [, htmlAlternateLink] = htmlAlternateLinkEntry;
+            addToHistory(
+              url,
+              ensureURL(htmlAlternateLink || window.location.href),
+            );
+          }
         }
-    };
-
-    this.start = async function* () {
-        tracking = true;
-        let first = true;
-        while (tracking) {
-            yield new Promise((resolve) => {
-                send = () => {
-                    resolve({ resource: lastResource, problem: lastProblem });
-                };
-                if (first) {
-                    this.follow(lastURL);
-                    first = false;
-                }
-            });
-        }
-    };
-
-    this.stop = function () {
-        if (stopped) {
-            return;
-        }
-        tracking = false;
-        send();
-        stopped = true;
-    };
-
-    this.follow = async function (link, options = {}) {
-        const id = ++highWater;
-        const url = ensureURL(link, baseURL);
-        if (url.origin !== baseURL.origin || typeof link === 'object' && 'type' in link && link.type.startsWith('text/html')) {
-            window.location = url;
-            return false;
-        }
-        const response = lastResponse = await request(url, options);
-        if (response.status === 204) {
-            return true;
-        }
-        if (!response.headers.has('content-type')) {
-            const problem = new MissingContentTypeError('the server responded without specifying a MIME type via the content-type HTTP response header', {response});
-            update(id, { problem, url });
-            return false;
-        }
-        const mimeType = response.headers.get('content-type');
-        if (!mimeType.startsWith('application/vnd.api+json')) {
-            const problem = new UnexpectedContentTypeError(response, `the server responded in with an unrecognizable media type: ${mimeType}`, {response});
-            update(id, { problem, url });
-            return false;
-        }
-        let doc
-        try {
-            doc = await response.json();
-        } catch (e) {
-            const problem = new UnexpectedContentError(`could not parse response as JSON despite the content-type header claiming to be ${mimeType}: ${e.reason}`, { response, cause: e });
-            update(id, { problem, url });
-            return false;
-        }
-        if (response.ok) {
-            let resource;
-            try {
-                resource = parse(doc);
-            } catch (e) {
-                throw new ImplementationError('could not parse JSON:API document', {cause: e});
-            }
-            const livePreview = doc?.meta?.applura?.livePreview;
-            if (livePreview && !isLivePreviewListenerRegistered) {
-                registerLivePreviewListener(livePreview)
-            }
-            if (navigate) {
-                if (id === highWater) {
-                    const htmlAlternateLinkEntry = Object.entries(doc?.data?.links || {}).find(([key, link]) => {
-                        return (link?.rel || key) === 'alternate' && (link?.type || '').startsWith('text/html');
-                    });
-                    if (htmlAlternateLinkEntry) {
-                        const [, htmlAlternateLink] = htmlAlternateLinkEntry;
-                        addToHistory(url, ensureURL(htmlAlternateLink || window.location.href));
-                    }
-                }
-            }
-            update(id, { resource, url });
-            return true;
-        }
-        const errorDetails = (doc.errors || []).filter((e) => e.detail).map((e) => `detail: ${e.detail}`)
-        if (response.status >= 400 && response.status <= 499) {
-            const problem = new RequestError(['request error', `${response.status} ${response.statusText}`, ...errorDetails].join(': '), {doc, response})
-            update(id, { problem, url });
-        } else if (response.status >= 500 && response.status <= 599) {
-            const problem = new ServerError(response, ['response error', `${response.status} ${response.statusText}`, ...errorDetails], {doc, response});
-            update(id, { problem, url });
-        } else {
-            throw new ImplementationError(`unhandled response type: ${response.status} ${response.statusText}`);
-        }
-        return false;
+      }
+      update(id, { resource, url });
+      return true;
     }
-
-    this.resource = function () {
-        return lastResource;
+    const errorDetails = (doc.errors || []).filter((e) => e.detail).map((e) =>
+      `detail: ${e.detail}`
+    );
+    if (response.status >= 400 && response.status <= 499) {
+      const problem = new RequestError(
+        [
+          "request error",
+          `${response.status} ${response.statusText}`,
+          ...errorDetails,
+        ].join(": "),
+        { doc, response },
+      );
+      update(id, { problem, url });
+    } else if (response.status >= 500 && response.status <= 599) {
+      const problem = new ServerError(response, [
+        "response error",
+        `${response.status} ${response.statusText}`,
+        ...errorDetails,
+      ], { doc, response });
+      update(id, { problem, url });
+    } else {
+      throw new ImplementationError(
+        `unhandled response type: ${response.status} ${response.statusText}`,
+      );
     }
+    return false;
+  };
 
-    this.response = function () {
-        return lastResponse;
-    }
+  this.resource = function () {
+    return lastResource;
+  };
 
-    this.refresh = function () {
-        return this.follow(lastURL);
-    }
+  this.response = function () {
+    return lastResponse;
+  };
+
+  this.refresh = function () {
+    return this.follow(lastURL);
+  };
 }

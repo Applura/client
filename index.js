@@ -1,28 +1,28 @@
 import Client, { bootstrap } from "./src/client.js";
 import {
-    LibraryError,
-    ImplementationError,
-    UsageError,
-    RequestError,
-    ResponseError,
-    ServerError,
-    UnprocessableResponseError,
-    MissingContentTypeError,
-    UnexpectedContentTypeError,
-    UnexpectedContentError,
-} from './src/errors.js';
+  ImplementationError,
+  LibraryError,
+  MissingContentTypeError,
+  RequestError,
+  ResponseError,
+  ServerError,
+  UnexpectedContentError,
+  UnexpectedContentTypeError,
+  UnprocessableResponseError,
+  UsageError,
+} from "./src/errors.js";
 
-export default Client
+export default Client;
 export { bootstrap };
 export {
-    LibraryError,
-    ImplementationError,
-    UsageError,
-    RequestError,
-    ResponseError,
-    ServerError,
-    UnprocessableResponseError,
-    MissingContentTypeError,
-    UnexpectedContentTypeError,
-    UnexpectedContentError,
-}
+  ImplementationError,
+  LibraryError,
+  MissingContentTypeError,
+  RequestError,
+  ResponseError,
+  ServerError,
+  UnexpectedContentError,
+  UnexpectedContentTypeError,
+  UnprocessableResponseError,
+  UsageError,
+};

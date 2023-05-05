@@ -121,7 +121,7 @@ export default function Client(initialURL) {
       return;
     }
     lastResource = resource || lastResource;
-    lastProblem = problem || lastProblem;
+    lastProblem = problem;
     lastURL = url || lastURL;
     send();
   };

@@ -189,6 +189,7 @@ export default function Client(initialURL) {
         "the server responded without specifying a MIME type via the content-type HTTP response header",
         { response },
       );
+      await response.body.cancel("missing content-type");
       update(id, { problem, url });
       return false;
     }
@@ -199,6 +200,7 @@ export default function Client(initialURL) {
         `the server responded in with an unrecognizable media type: ${mimeType}`,
         { response },
       );
+      await response.body.cancel("unacceptable content-type");
       update(id, { problem, url });
       return false;
     }

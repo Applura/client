@@ -72,10 +72,7 @@ Deno.test('Client', async (t) => {
                     },
                 }),
             ]);
-            const performTest = async ([name, test]) => {
-                [name, test] = tests[testIndex];
-                await t.step(name, test);
-            }
+            const performTest = async ([name, test]) => await t.step(name, test);
             let testIndex = 0;
             let eventCount = 0;
             for await (const event of client.start()) {

@@ -36,9 +36,8 @@ export class RequestError extends LibraryError {
 // Raised when an HTTP response causes an error.
 export class ResponseError extends LibraryError {
   constructor(message, { doc, response, ...options }) {
-    super(message, options);
+    super(message, { ...options, doc: { value: doc } });
     this.name = "ResponseError";
-    Object.defineProperty(this, "doc", { value: doc });
     Object.defineProperty(this, "response", { value: response });
   }
 }
@@ -54,15 +53,19 @@ export class ServerError extends ResponseError {
 // Raised when served an OK response with unexpected body content.
 export class UnprocessableResponseError extends ResponseError {
   constructor(message, { response, ...options }) {
-    super(message, { ...options, response, doc: undefined });
-    this.name = "ResponseBodyError";
-    Object.defineProperty(this, "doc", {
-      get() {
-        throw new UsageError(
-          `${this.name} does not have a doc property because the response could not be processed`,
-        );
+    super(message, {
+      ...options,
+      response,
+      doc: {
+        value: undefined,
+        get() {
+          throw new UsageError(
+            `${this.name} does not have a doc property because the response could not be processed`,
+          );
+        },
       },
     });
+    this.name = "ResponseBodyError";
   }
 }
 

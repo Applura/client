@@ -1,6 +1,10 @@
 import Client from "./client.js";
-import { assertEquals } from "https://deno.land/std@0.185.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertInstanceOf,
+} from "https://deno.land/std@0.185.0/testing/asserts.ts";
 import TestServer from "./internal/testing/server.js";
+import { UnexpectedContentTypeError } from "./errors.js";
 
 Deno.test("Client", async (t) => {
   const serverOptions = { hostname: "0.0.0.0", port: 3003 };
@@ -95,6 +99,53 @@ Deno.test("Client", async (t) => {
         client.follow(serverURL);
       }
       assertEquals(eventCount, 2);
+    });
+  });
+
+  await doTest("can process unexpected HTTP responses", async (t) => {
+    await t.step("unrecognized content-type header", async () => {
+      const client = new Client(serverURL);
+      const loop = client.start();
+      server.respondWith(
+        new Response(
+          '{"data":{"type":"myType","id":"bad resource"}}',
+          { headers: { "content-type": "foobar" } },
+        ),
+      );
+      let { resource, problem } = (await loop.next()).value;
+      let { status } = client.response();
+      assertEquals(status, 200);
+      assertEquals(resource, undefined);
+      assertInstanceOf(problem, UnexpectedContentTypeError);
+      // Get a good response.
+      server.respondWith(
+        new Response(
+          '{"data":{"type":"myType","id":"200 resource"}}',
+          { headers: { "content-type": "application/vnd.api+json" } },
+        ),
+      );
+      client.follow(serverURL);
+      ({ resource, problem } = (await loop.next()).value);
+      ({ status } = client.response());
+      assertEquals(status, 200);
+      assertEquals(resource.id, "200 resource");
+      // A good response should clear the problem.
+      assertEquals(problem, undefined);
+      // Then get another unrecognized content-type response to ensure that the last good resource is still
+      // available.
+      server.respondWith(
+        new Response(
+          '{"data":{"type":"myType","id":"bad resource"}}',
+          { headers: { "content-type": "foobar" } },
+        ),
+      );
+      client.follow(serverURL);
+      ({ resource, problem } = (await loop.next()).value);
+      ({ status } = client.response());
+      assertEquals(status, 200);
+      assertEquals(resource.id, "200 resource");
+      assertInstanceOf(problem, UnexpectedContentTypeError);
+      client.stop();
     });
   });
 

@@ -10,7 +10,7 @@ file. Like so:
 
 ```html
 <script type="importmap">{"imports":{"@applura/client":"https://cdn.applura.com/dist/js/client/v2.js"}}</script>
-<script async rel="preload" type="module" src="https://cdn.applura.com/dist/js/client/v2.js"></script>
+<link rel="preload" as="script" src="https://cdn.applura.com/dist/js/client/v2.js" crossorigin />
 ```
 
 > Note: This CDN URL is the standard and only supported way to import the

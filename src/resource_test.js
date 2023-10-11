@@ -60,14 +60,6 @@ const testDoc1 = {
         "date": "2023-10-02",
         "excerpt": "\u003Cp\u003EJust a few words about this post\u003C\/p\u003E"
       },
-      "relationships": {
-        "mainMenu": {
-          "data": {
-            "type": "nav:menu",
-            "id": "nav:menu:main"
-          }
-        }
-      },
       "links": {
         "canonical": {
           "href": "\/blog\/test-article"
@@ -77,9 +69,19 @@ const testDoc1 = {
   ]
 }
 
-Deno.test("parse", () => {
-  const parsed = parse(testDoc1);
+const parsed = parse(testDoc1);
+Deno.test("parse basic", () => {
   assertEquals(parsed.type, "blog");
   assertEquals(parsed.title, "Blog");
+  // assertEquals(parsed.posts[0].title, 'Test article');
+});
+
+Deno.test("parse relationships", () => {
   assertEquals(parsed.posts.data[0].title, 'Test article');
+  assertEquals(parsed.mainMenu.data.items[0].title, 'Home');
+})
+
+Deno.test("parse links", () => {
+  assertEquals(parsed.links.get('self').href, '/blog');
+  assertEquals(parsed.posts.data[0].links.get('canonical').href, '/blog/test-article')
 });

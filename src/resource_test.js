@@ -30,7 +30,7 @@ const testDoc1 = {
     "links": {
       "self": {
         "href": "\/blog"
-      }
+      },
     }
   },
   "included": [
@@ -84,4 +84,6 @@ Deno.test("parse relationships", () => {
 Deno.test("parse links", () => {
   assertEquals(parsed.links.get('self').href, '/blog');
   assertEquals(parsed.posts.data[0].links.get('canonical').href, '/blog/test-article')
+  const selfLinks = parsed.links.getAll('self');
+  assertEquals(selfLinks[0].href, '/blog');
 });

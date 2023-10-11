@@ -56,17 +56,10 @@ function Resource(obj, doc) {
 
 function Relationship(obj, doc) {
   if ("data" in obj) {
-    if (Array.isArray(obj.data)) {
-      Object.defineProperty(this, "data", {
-        get: () => obj.data.map(resolveFrom(doc)),
-        enumerable: true,
-      });
-    } else {
-      Object.defineProperty(this, "data", {
-        get: () => resolveFrom(doc)(obj.data),
-        enumerable: true,
-      });
-    }
+    Object.defineProperty(this, "data", {
+      get: () => Array.isArray(obj.data) ? obj.data.map(resolveFrom(doc)) : resolveFrom(doc)(obj.data),
+      enumerable: true,
+    });
   }
   if ("links" in obj) {
     Object.defineProperty(this, "links", {

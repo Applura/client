@@ -60,6 +60,13 @@ function Relationship(obj, doc) {
       get: () => Array.isArray(obj.data) ? obj.data.map(resolveFrom(doc)) : resolveFrom(doc)(obj.data),
       enumerable: true,
     });
+    Object.defineProperty(this, Symbol.iterator, {
+      value: function* () {
+        for (const resource of this.data) {
+          yield resource;
+        }
+      }
+    });
   }
   if ("links" in obj) {
     Object.defineProperty(this, "links", {

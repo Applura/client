@@ -87,3 +87,20 @@ Deno.test("parse links", () => {
   const selfLinks = parsed.links.getAll('self');
   assertEquals(selfLinks[0].href, '/blog');
 });
+
+Deno.test('iterable relationships', () => {
+  const articleTitles = ['Test article', 'Test article 2'];
+  console.log({ posts: parsed.posts });
+
+  for (const post of parsed.posts) {
+    // parsed.posts.forEach((post, i) => {
+    console.log({ post})
+    assertEquals(post.title, articleTitles[0]);
+    // });
+  }
+  for (const menuItem of parsed.mainMenu) {
+    assertEquals(menuItem.title, 'Home');
+  }
+  // assertEquals(parsed.posts[0].title, 'Test article');
+  // assertEquals(parsed.mainMenu.data.items[0].title, 'Home');
+});

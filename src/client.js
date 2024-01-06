@@ -96,12 +96,15 @@ export function bootstrap() {
   const client = new Client(initialURL.href);
   // Register a global listener for history updates.
   addEventListener("popstate", (event) => {
-    // Not navigating on a "back".
-    if ("url" in event.state) {
-      navigate = false;
-      client.follow(event.state.url, {}).finally(() => {
-        navigate = true;
-      });
+    // Not navigating without a state.
+    if (event.state) {
+      // Not navigating on a "back".
+      if ("url" in event.state) {
+        navigate = false;
+        client.follow(event.state.url, {}).finally(() => {
+          navigate = true;
+        });
+      }
     }
   });
   return client;

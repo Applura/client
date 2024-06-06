@@ -63,9 +63,8 @@ function request(url, options) {
  *
  * If the URL is not HTTP, for instance a data: URI, then this method returns false.
  *
- * If the URL's hostname (which does not include the port) is localhost, 127.0.0.1, or ends with .test, the hostname is
- * assumed to be "local", i.e. targeting a server on the developer's own machine. If the hostname is any other value,
- * then this method returns false.
+ * If the URL's hostname local.applura.app the hostname is assumed to be "local", i.e. targeting a server on the
+ * developer's own machine. If the hostname is any other value, then this method returns false.
  *
  * @param {Location} url
  *
@@ -73,8 +72,7 @@ function request(url, options) {
  */
 function isLocalURL(url) {
   const isHTTP = ["http:", "https:"].includes(url.protocol);
-  const isLocalHost = url.hostname.endsWith(".test") ||
-    ["localhost", "127.0.0.1"].includes(url.hostname);
+  const isLocalHost = url.hostname === "local.applura.app";
   return isHTTP && isLocalHost;
 }
 

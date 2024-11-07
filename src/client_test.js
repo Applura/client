@@ -2,8 +2,8 @@ import Client, { isLocalURL } from "./client.js";
 import {
   assert,
   assertEquals,
-  assertInstanceOf,
   assertFalse,
+  assertInstanceOf,
 } from "https://deno.land/std@0.185.0/testing/asserts.ts";
 import TestServer from "./internal/testing/server.js";
 import { UnexpectedContentTypeError } from "./errors.js";
@@ -22,22 +22,21 @@ Deno.test("Client", async (t) => {
     await t.step({ name, fn, sanitizeOps: false, sanitizeResources: false });
 
   await doTest("can check if localhost", async (t) => {
-
     const testUrls = [
-      { url: 'http://localhost', condition: true },
-      { url: 'http://localhost:8080', condition: true },
-      { url: 'http://applura.site', condition: true },
-      { url: 'http://applura.site:8080', condition: true },
-      { url: 'http://applura.app', condition: false },
-      { url: 'http://local.applura.app', condition: false },
-      { url: serverURL , condition: false },
-    ]
+      { url: "http://localhost", condition: true },
+      { url: "http://localhost:8080", condition: true },
+      { url: "http://applura.site", condition: true },
+      { url: "http://applura.site:8080", condition: true },
+      { url: "http://applura.app", condition: false },
+      { url: "http://local.applura.app", condition: false },
+      { url: serverURL, condition: false },
+    ];
     testUrls.forEach(({ url, condition }) => {
       assert(
         isLocalURL(new URL(url)) === condition,
-        `${url} ${condition ? 'isLocal' : 'not isLocal'}`
+        `${url} ${condition ? "isLocal" : "not isLocal"}`,
       );
-    })
+    });
   });
 
   await doTest("can process HTTP responses", async (t) => {

@@ -9,8 +9,19 @@ Add the following HTML elements to the `<head>` of your project's `index.html`
 file. Like so:
 
 ```html
-<script type="importmap">{"imports":{"@applura/client":"https://cdn.applura.com/dist/js/client/v2.js"}}</script>
-<link rel="preload" as="script" href="https://cdn.applura.com/dist/js/client/v2.js" crossorigin />
+<script type="importmap">
+  {
+    "imports": {
+      "@applura/client": "https://cdn.applura.com/dist/js/client/v2.js"
+    }
+  }
+</script>
+<link
+  rel="preload"
+  as="script"
+  href="https://cdn.applura.com/dist/js/client/v2.js"
+  crossorigin
+/>
 ```
 
 > Note: This CDN URL is the standard and only supported way to import the

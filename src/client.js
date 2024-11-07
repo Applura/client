@@ -70,9 +70,9 @@ function request(url, options) {
  *
  * @return {boolean}
  */
-function isLocalURL(url) {
+export function isLocalURL(url) {
   const isHTTP = ["http:", "https:"].includes(url.protocol);
-  const isLocalHost = url.hostname === "local.applura.app";
+  const isLocalHost = ["applura.site", "localhost"].includes(url.hostname);
   return isHTTP && isLocalHost;
 }
 

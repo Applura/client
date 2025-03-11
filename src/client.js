@@ -52,7 +52,7 @@ function request(url, options) {
     credentials: "include",
     headers: {
       ...(options.headers || {}),
-      "accept": "application/vnd.api+json",
+      "accept": "application/vnd.api+json, application/problem+json",
     },
   };
   return fetch(url, init);
@@ -195,7 +195,10 @@ export default function Client(initialURL) {
       return false;
     }
     const mimeType = response.headers.get("content-type");
-    if (!mimeType.startsWith("application/vnd.api+json")) {
+    if (
+      !(mimeType.startsWith("application/vnd.api+json") ||
+        mimeType.startsWith("application/problem+json"))
+    ) {
       const problem = new UnexpectedContentTypeError(
         response,
         `the server responded in with an unrecognizable media type: ${mimeType}`,

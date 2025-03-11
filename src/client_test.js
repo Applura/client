@@ -2,7 +2,6 @@ import Client, { isLocalURL } from "./client.js";
 import {
   assert,
   assertEquals,
-  assertFalse,
   assertInstanceOf,
 } from "https://deno.land/std@0.185.0/testing/asserts.ts";
 import TestServer from "./internal/testing/server.js";

@@ -2,10 +2,8 @@ import Client, { isLocalURL } from "./client.js";
 import {
   assert,
   assertEquals,
-  assertInstanceOf,
 } from "https://deno.land/std@0.185.0/testing/asserts.ts";
 import TestServer from "./internal/testing/server.js";
-import { UnexpectedContentTypeError } from "./errors.js";
 
 Deno.test("Client", async (t) => {
   const serverOptions = { hostname: "0.0.0.0", port: 3003 };
@@ -135,7 +133,10 @@ Deno.test("Client", async (t) => {
       let { status } = client.response();
       assertEquals(status, 200);
       assertEquals(resource, undefined);
-      assertInstanceOf(problem, UnexpectedContentTypeError);
+      assertEquals(
+        problem.type,
+        "https://docs.applura.com/client/v2/errors#UnexpectedContentTypeError",
+      );
       // Get a good response.
       server.respondWith(
         new Response(
@@ -163,7 +164,10 @@ Deno.test("Client", async (t) => {
       ({ status } = client.response());
       assertEquals(status, 200);
       assertEquals(resource.id, "200 resource");
-      assertInstanceOf(problem, UnexpectedContentTypeError);
+      assertEquals(
+        problem.type,
+        "https://docs.applura.com/client/v2/errors#UnexpectedContentTypeError",
+      );
       client.stop();
     });
   });

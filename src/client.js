@@ -1,5 +1,6 @@
 import {
   ImplementationError,
+  LibraryError,
   MissingContentTypeError,
   RequestError,
   ServerError,
@@ -122,7 +123,7 @@ export default function Client(initialURL) {
       return;
     }
     lastResource = resource || lastResource;
-    lastProblem = problem;
+    lastProblem = problem instanceof LibraryError ? problem.detail : problem;
     lastURL = url || lastURL;
     send();
   };
@@ -200,7 +201,6 @@ export default function Client(initialURL) {
         mimeType.startsWith("application/problem+json"))
     ) {
       const problem = new UnexpectedContentTypeError(
-        response,
         `the server responded in with an unrecognizable media type: ${mimeType}`,
         { response },
       );
@@ -251,25 +251,31 @@ export default function Client(initialURL) {
       update(id, { resource, url });
       return true;
     }
-    const errorDetails = (doc.errors || []).filter((e) => e.detail).map((e) =>
-      `detail: ${e.detail}`
+    console.assert(
+      mimeType.startsWith("application/vnd.api+json") ||
+        mimeType.startsWith("application/problem+json"),
     );
+    const errorDetail = mimeType.startsWith("application/problem+json")
+      ? doc.detail
+      : (doc.errors || []).filter((e) => e.detail).map((e) =>
+        `detail: ${e.detail}`
+      ).join(", ");
     if (response.status >= 400 && response.status <= 499) {
       const problem = new RequestError(
         [
           "request error",
           `${response.status} ${response.statusText}`,
-          ...errorDetails,
+          errorDetail,
         ].join(": "),
-        { doc, response },
+        { response },
       );
       update(id, { problem, url });
     } else if (response.status >= 500 && response.status <= 599) {
       const problem = new ServerError(response, [
         "response error",
         `${response.status} ${response.statusText}`,
-        ...errorDetails,
-      ], { doc, response });
+        errorDetail,
+      ], { response });
       update(id, { problem, url });
     } else {
       throw new ImplementationError(

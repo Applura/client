@@ -4,11 +4,18 @@ export class LibraryError extends Error {
     super(message, options);
     this.name = "LibraryError";
   }
+  get detail() {
+    return {
+      type: `https://docs.applura.com/client/v2/errors#${this.name}`,
+      title: this.name,
+      detail: this.message,
+    };
+  }
 }
 
 // Raised when the implementation of this library has caused an error. For example, when a known edge case has not been
 // handled.
-export class ImplementationError extends Error {
+export class ImplementationError extends LibraryError {
   constructor(message, options) {
     super(message, options);
     this.name = "ImplementationError";
@@ -23,22 +30,34 @@ export class UsageError extends LibraryError {
   }
 }
 
-// Raised when an HTTP request causes an HTTP client error, i.e. for HTTP status codes >=300 and <=399.
-export class RequestError extends LibraryError {
-  constructor(message, { doc, response, ...options }) {
+// Raised when an HTTP response is in error, i.e. for HTTP status codes >=400.
+export class HTTPError extends LibraryError {
+  constructor(message, { response, ...options }) {
     super(message, options);
     this.name = "RequestError";
-    Object.defineProperty(this, "doc", { value: doc });
     Object.defineProperty(this, "response", { value: response });
+  }
+  get detail() {
+    return {
+      ...super.detail,
+      status: this.response.status,
+    };
+  }
+}
+
+// Raised when an HTTP request causes an HTTP client error, i.e. for HTTP status codes >=400 and <=499.
+export class RequestError extends HTTPError {
+  constructor(message, options) {
+    super(message, options);
+    this.name = "RequestError";
   }
 }
 
 // Raised when an HTTP response causes an error.
-export class ResponseError extends LibraryError {
-  constructor(message, { doc, response, ...options }) {
-    super(message, { ...options, doc: { value: doc } });
+export class ResponseError extends HTTPError {
+  constructor(message, options) {
+    super(message, options);
     this.name = "ResponseError";
-    Object.defineProperty(this, "response", { value: response });
   }
 }
 

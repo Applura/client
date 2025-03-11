@@ -20,7 +20,7 @@ Deno.test("Client", async (t) => {
   const doTest = async (name, fn) =>
     await t.step({ name, fn, sanitizeOps: false, sanitizeResources: false });
 
-  await doTest("can check if localhost", async (t) => {
+  await doTest("can check if localhost", () => {
     const testUrls = [
       { url: "http://localhost", condition: true },
       { url: "http://localhost:8080", condition: true },

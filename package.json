@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/Applura/client#readme",
   "dependencies": {
+    "@applura/ouroboros": "^1.0.0-rc1",
     "rollup": "^3.8.1"
   }
 }

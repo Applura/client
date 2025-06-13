@@ -75,7 +75,7 @@ Deno.test("parse: to-many relationship destructuring", () => {
         bar: "baz",
       },
     }],
-  })
+  });
 
   const { foo } = parse(jsonString);
   assertEquals(2, foo.length);

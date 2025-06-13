@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rollup index.js --file dist/v2.js",
     "check": "npm run fmt -- --check && npm run lint && npm test",
-    "test": "deno test --allow-net",
+    "test": "deno install && deno test --allow-net",
     "lint": "deno lint --rules-exclude=no-window",
     "fmt": "deno fmt"
   },

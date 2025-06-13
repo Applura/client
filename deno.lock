@@ -1,5 +1,23 @@
 {
   "version": "4",
+  "specifiers": {
+    "npm:@applura/ouroboros@^1.0.0-rc1": "1.0.0-rc1",
+    "npm:rollup@^3.8.1": "3.29.5"
+  },
+  "npm": {
+    "@applura/ouroboros@1.0.0-rc1": {
+      "integrity": "sha512-ZxqUO6HArryrVhWPsVB9Ix9A4a8DRtsP4nvkEvMZCXKkFimGX+cW87gvs4MrCtRcWZzVY7ZRBb3Kc1xk7bJo8Q=="
+    },
+    "fsevents@2.3.3": {
+      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="
+    },
+    "rollup@3.29.5": {
+      "integrity": "sha512-GVsDdsbJzzy4S/v3dqWPJ7EfvZJfCHiDqe80IyrF59LYuP+e6U1LJoUqeuqRbwAWoMNoXivMNeNAOf5E22VA1w==",
+      "dependencies": [
+        "fsevents"
+      ]
+    }
+  },
   "redirects": {
     "https://deno.land/std/testing/asserts.ts": "https://deno.land/std@0.224.0/testing/asserts.ts"
   },

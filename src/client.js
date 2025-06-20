@@ -104,21 +104,39 @@ export function bootstrap() {
     const anchor = event.target;
     const href = anchor.href; // Safe to access href directly
 
-    // Check if href is a relative URL
-    const isRelative = href &&
-      (href.startsWith("./") || href.startsWith("/") ||
-        !/^(?:[a-z]+:)?\/\//i.test(href));
-    if (!isRelative) return;
+    // Check if href is external or has a non-web protocol
+    let url;
+    try {
+      url = new URL(href, appDiv.baseURI);
+    } catch {
+      console.warn(`Invalid href: ${href}`);
+      return;
+    }
+    const isExternal = url.protocol !== "http:" && url.protocol !== "https:" ||
+      url.origin !== new URL(appDiv.baseURI).origin;
+    if (isExternal) return;
 
     // Check if anchor has a type attribute (opt-out)
     if (anchor.hasAttribute("type")) return;
+
+    // Check if anchor has a download attribute
+    if (anchor.hasAttribute("download")) return;
+
+    // Check if anchor has a target attribute that is not _blank
+    if (
+      anchor.hasAttribute("target") &&
+      anchor.getAttribute("target") !== "_blank"
+    ) return;
 
     // Prevent default behavior and stop propagation
     event.preventDefault();
     event.stopPropagation();
 
+    // Use normalized href
+    const normalizedHREF = url.href;
+
     // Call the client's follow function
-    client.follow(href, {});
+    client.follow(normalizedHREF, {});
   });
 
   // Register a global listener for history updates

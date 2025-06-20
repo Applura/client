@@ -136,7 +136,7 @@ export function bootstrap() {
     const normalizedHREF = url.href;
 
     // Call the client's follow function
-    client.follow(normalizedHREF, {});
+    client.follow(normalizedHREF);
   });
 
   // Register a global listener for history updates

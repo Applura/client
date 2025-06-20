@@ -30,6 +30,9 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Install deno dependencies
+        run: deno install
+
       - name: Verify formatting
         run: npm run fmt -- --check
 

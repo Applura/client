@@ -9,7 +9,7 @@ import {
   UsageError,
 } from "./errors.js";
 
-import parse from "./resource.js";
+import { consume } from "@applura/ouroboros";
 
 function ensureURL(target, baseURL) {
   if (typeof target === "string") {
@@ -222,7 +222,7 @@ export default function Client(initialURL) {
     if (response.ok) {
       let resource;
       try {
-        resource = parse(doc);
+        resource = consume(doc);
       } catch (e) {
         throw new ImplementationError("could not parse JSON:API document", {
           cause: e,

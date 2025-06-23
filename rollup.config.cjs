@@ -1,7 +1,9 @@
 const { nodeResolve } = require("@rollup/plugin-node-resolve");
 
 module.exports = {
-  plugins: [
-    nodeResolve({ resolveOnly: ["npm:@applura/ouroboros"] }),
-  ],
+  input: "index.js",
+  output: {
+    file: "dist/v2.js",
+  },
+  plugins: [nodeResolve()],
 };

@@ -1,4 +1,4 @@
-import { parse } from "npm:@applura/ouroboros";
+import { parse } from "@applura/ouroboros";
 import {
   assertEquals,
   assertThrows,

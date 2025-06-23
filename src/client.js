@@ -9,7 +9,7 @@ import {
   UsageError,
 } from "./errors.js";
 
-import { consume } from "npm:@applura/ouroboros";
+import { consume } from "@applura/ouroboros";
 
 function ensureURL(target, baseURL) {
   if (typeof target === "string") {

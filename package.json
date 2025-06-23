@@ -5,7 +5,7 @@
   "description": "A JavaScript client for Applura APIs",
   "main": "index.js",
   "scripts": {
-    "build": "rollup index.js --config=rollup.config.cjs --file dist/v2.js",
+    "build": "npx rollup index.js --config=rollup.config.cjs --file dist/v2.js",
     "check": "npm run fmt -- --check && npm run lint && npm test",
     "test": "deno test --allow-net",
     "lint": "deno lint --rules-exclude=no-window",
@@ -23,7 +23,10 @@
   "homepage": "https://github.com/Applura/client#readme",
   "dependencies": {
     "@applura/ouroboros": "^1.0.0-rc1",
-    "@rollup/plugin-node-resolve": "^16.0.1",
     "rollup": "^3.8.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1"
   }
 }

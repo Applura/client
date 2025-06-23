@@ -1,27 +1,28 @@
-import parse from "./resource.js";
+import { parse } from "@applura/ouroboros";
 import {
   assertEquals,
   assertThrows,
-} from "https://deno.land/std@0.203.0/assert/mod.ts";
+} from "https://deno.land/std/testing/asserts.ts";
 import { UsageError } from "./errors.js";
 
 Deno.test("parse: usage error", () => {
-  assertThrows(() => parse({}), UsageError);
+  assertThrows(() => parse(JSON.stringify({})), new UsageError("Test error"));
 });
 
 Deno.test("parse: attribute destructuring", () => {
-  const { foo } = parse({
+  const jsonString = JSON.stringify({
     data: {
       attributes: {
         foo: "bar",
       },
     },
   });
+  const { foo } = parse(jsonString);
   assertEquals(foo, "bar");
 });
 
 Deno.test("parse: to-one relationship destructuring", () => {
-  const { foo: { data: { type, id, bar } } } = parse({
+  const jsonString = JSON.stringify({
     data: {
       relationships: {
         foo: {
@@ -40,13 +41,14 @@ Deno.test("parse: to-one relationship destructuring", () => {
       },
     }],
   });
+  const { foo: { type, id, bar } } = parse(jsonString);
   assertEquals(type, "foo:type");
   assertEquals(id, "3bd6083aff810e");
   assertEquals(bar, "baz");
 });
 
 Deno.test("parse: to-many relationship destructuring", () => {
-  const { foo: { data: bar } } = parse({
+  const jsonString = JSON.stringify({
     data: {
       relationships: {
         foo: {
@@ -74,8 +76,10 @@ Deno.test("parse: to-many relationship destructuring", () => {
       },
     }],
   });
-  assertEquals(2, bar.length);
-  const [one, two] = bar;
+
+  const { foo } = parse(jsonString);
+  assertEquals(2, foo.length);
+  const [one, two] = foo;
   assertEquals(one.type, "foo:type");
   assertEquals(one.id, "3bd6083aff810e");
   assertEquals(one.bar, "baz");

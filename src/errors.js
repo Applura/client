@@ -6,7 +6,7 @@ export class LibraryError extends Error {
   }
   get detail() {
     return {
-      type: `https://docs.applura.com/client/v2/errors#${this.name}`,
+      type: `https://docs.applura.com/client/v4/errors#${this.name}`,
       title: this.name,
       detail: this.message,
     };

@@ -12,14 +12,14 @@ file. Like so:
 <script type="importmap">
   {
     "imports": {
-      "@applura/client": "https://cdn.applura.com/dist/js/client/v2.js"
+      "@applura/client": "https://cdn.applura.com/dist/js/client/v4.js"
     }
   }
 </script>
 <link
   rel="preload"
   as="script"
-  href="https://cdn.applura.com/dist/js/client/v2.js"
+  href="https://cdn.applura.com/dist/js/client/v4.js"
   crossorigin
 />
 ```

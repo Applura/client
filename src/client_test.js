@@ -135,7 +135,7 @@ Deno.test("Client", async (t) => {
       assertEquals(resource, undefined);
       assertEquals(
         problem.type,
-        "https://docs.applura.com/client/v2/errors#UnexpectedContentTypeError",
+        "https://docs.applura.com/client/v4/errors#UnexpectedContentTypeError",
       );
       // Get a good response.
       server.respondWith(
@@ -166,7 +166,7 @@ Deno.test("Client", async (t) => {
       assertEquals(resource.id, "200 resource");
       assertEquals(
         problem.type,
-        "https://docs.applura.com/client/v2/errors#UnexpectedContentTypeError",
+        "https://docs.applura.com/client/v4/errors#UnexpectedContentTypeError",
       );
       client.stop();
     });

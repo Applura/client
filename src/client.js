@@ -80,7 +80,7 @@ export function isLocalURL(url) {
 export function bootstrap() {
   console.assert(
     !!window,
-    "boostrap error: must be called from within a browser context",
+    "bootstrap error: must be called from within a browser context",
   );
   const link = window.document.querySelector(
     'head link[rel*="alternate"][type="application/vnd.api+json"]',
@@ -93,7 +93,53 @@ export function bootstrap() {
     )
     : new URL(link.getAttribute("href"));
   const client = new Client(initialURL.href);
-  // Register a global listener for history updates.
+
+  // Add click event listener to div#app
+  const appDiv = document.getElementById("app");
+  console.assert(!!appDiv, "bootstrap error: missing div#app element");
+  appDiv.addEventListener("click", (event) => {
+    // Check if the target is an anchor element
+    if (!(event.target instanceof HTMLAnchorElement)) return;
+
+    const anchor = event.target;
+    const href = anchor.href; // Safe to access href directly
+
+    // Check if href is external or has a non-web protocol
+    let url;
+    try {
+      url = new URL(href, appDiv.baseURI);
+    } catch {
+      console.warn(`Invalid href: ${href}`);
+      return;
+    }
+    const isExternal = url.protocol !== "http:" && url.protocol !== "https:" ||
+      url.origin !== new URL(appDiv.baseURI).origin;
+    if (isExternal) return;
+
+    // Check if anchor has a type attribute (opt-out)
+    if (anchor.hasAttribute("type")) return;
+
+    // Check if anchor has a download attribute
+    if (anchor.hasAttribute("download")) return;
+
+    // Check if anchor has a target attribute that is not _blank
+    if (
+      anchor.hasAttribute("target") &&
+      anchor.getAttribute("target") !== "_blank"
+    ) return;
+
+    // Prevent default behavior and stop propagation
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Use normalized href
+    const normalizedHREF = url.href;
+
+    // Call the client's follow function
+    client.follow(normalizedHREF);
+  });
+
+  // Register a global listener for history updates
   addEventListener("popstate", (event) => {
     // Not navigating without a state.
     if (event.state) {
@@ -106,6 +152,7 @@ export function bootstrap() {
       }
     }
   });
+
   return client;
 }
 
